@@ -56,7 +56,7 @@ const App: React.FC = () => {
           onGridReady={handleGridReady}
         />
       </main>
-      <Footer shown={filteredData.length} total={employees.length} />
+      <Footer />
     </div>
   );
 };
