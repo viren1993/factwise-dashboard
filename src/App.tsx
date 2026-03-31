@@ -1,4 +1,4 @@
-import React, { useRef, useCallback } from "react";
+import React, { useRef, useCallback, useState, useEffect } from "react";
 import { GridApi } from "ag-grid-community";
 
 import Header from "./components/layout/Header";
@@ -7,12 +7,33 @@ import Strip from "./components/ui/Strip";
 import Toolbar from "./components/toolbar/Toolbar";
 import EmployeeGrid from "./components/grid/EmployeeGrid";
 
-import { employees } from "./data/employees";
 import { useEmployeeFilters } from "./hooks/useEmployeeFilters";
 import { useDashboard } from "./hooks/useDashboard";
 
+import { fetchEmployees } from "./services/employeeService";
+import { Employee } from "./types/employee";
+
 const App: React.FC = () => {
   const gridApiRef = useRef<GridApi | null>(null);
+
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadEmployees = async () => {
+      try {
+        const data = await fetchEmployees();
+        setEmployees(data);
+      } catch (err) {
+        setError("Failed to load employees");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadEmployees();
+  }, []);
 
   const {
     quickFilter,
@@ -50,11 +71,19 @@ const App: React.FC = () => {
         onExport={handleExport}
       />
       <main className="flex-1 px-8 py-5">
-        <EmployeeGrid
-          rowData={filteredData}
-          quickFilterText={quickFilter}
-          onGridReady={handleGridReady}
-        />
+        {loading ? (
+          <div className="text-center py-10 text-gray-500">
+            Loading employees...
+          </div>
+        ) : error ? (
+          <div className="text-center py-10 text-red-500">{error}</div>
+        ) : (
+          <EmployeeGrid
+            rowData={filteredData}
+            quickFilterText={quickFilter}
+            onGridReady={handleGridReady}
+          />
+        )}
       </main>
       <Footer />
     </div>
